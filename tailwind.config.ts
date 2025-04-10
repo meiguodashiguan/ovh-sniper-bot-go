@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// 新增自定义颜色
+				ovh: {
+					blue: '#0050D7',
+					purple: '#4D2EA0',
+					teal: '#00E9CC',
+					success: '#0eac5c',
+					warning: '#FF9F1B',
+					error: '#e85254',
+					gray: '#F2F2F2'
 				}
 			},
 			borderRadius: {
@@ -84,11 +95,19 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-soft': {
+					'0%, 100%': { opacity: 1 },
+					'50%': { opacity: 0.6 }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+			},
+			backgroundImage: {
+				'gradient-ovh': 'linear-gradient(135deg, #4D2EA0 0%, #0050D7 100%)',
 			}
 		}
 	},
