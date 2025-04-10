@@ -8,10 +8,15 @@ import Header from '@/components/Header';
 import { OvhService } from '@/services/ovhService';
 import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { MoonStar, Sun, SunMoon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { toast } = useToast();
+  const { setTheme, theme } = useTheme();
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [ovhConfig, setOvhConfig] = useState<OvhConfig | null>(null);
@@ -243,19 +248,49 @@ const Index = () => {
     }
   }, [taskStatus.logs]);
 
+  // 切换主题函数
+  const cycleTheme = () => {
+    if (theme === 'dark') {
+      setTheme('light');
+    } else if (theme === 'light') {
+      setTheme('system');
+    } else {
+      setTheme('dark');
+    }
+  };
+
+  // 主题图标
+  const ThemeIcon = () => {
+    if (theme === 'dark') return <MoonStar className="h-[1.2rem] w-[1.2rem]" />;
+    if (theme === 'light') return <Sun className="h-[1.2rem] w-[1.2rem]" />;
+    return <SunMoon className="h-[1.2rem] w-[1.2rem]" />;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
       <Header />
       
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-4 relative">
+        <div className="absolute top-4 right-4">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full" 
+            onClick={cycleTheme}
+            title="切换主题"
+          >
+            <ThemeIcon />
+          </Button>
+        </div>
+        
         {!isConfigured ? (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 mb-8 border dark:border-gray-700">
               <h2 className="text-2xl font-bold text-center mb-6">配置 OVH 服务器抢购</h2>
               <ConfigForm onSubmit={handleSubmit} />
             </div>
             
-            <div className="text-center text-gray-600 mt-8">
+            <div className="text-center text-gray-600 dark:text-gray-400 mt-8">
               <p>
                 本工具用于自动检查和抢购 OVH 服务器。填写必要信息后开始抢购任务。
               </p>
@@ -269,20 +304,20 @@ const Index = () => {
             <div className="lg:col-span-2">
               <Tabs defaultValue="status" className="w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <TabsList>
-                    <TabsTrigger value="status">任务状态</TabsTrigger>
-                    <TabsTrigger value="availability">服务器可用性</TabsTrigger>
+                  <TabsList className="grid grid-cols-2 h-11">
+                    <TabsTrigger value="status" className="text-base">任务状态</TabsTrigger>
+                    <TabsTrigger value="availability" className="text-base">服务器可用性</TabsTrigger>
                   </TabsList>
                   
                   <button 
                     onClick={() => setIsConfigured(false)}
-                    className="text-sm text-ovh-blue hover:underline"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                   >
                     修改配置
                   </button>
                 </div>
                 
-                <TabsContent value="status">
+                <TabsContent value="status" className="mt-2">
                   <TaskCard 
                     taskStatus={taskStatus}
                     onStopTask={stopTask}
@@ -290,7 +325,7 @@ const Index = () => {
                   />
                 </TabsContent>
                 
-                <TabsContent value="availability">
+                <TabsContent value="availability" className="mt-2">
                   <StatusDisplay 
                     availabilities={availabilities}
                     isLoading={isRunning}
@@ -301,49 +336,78 @@ const Index = () => {
             </div>
             
             <div>
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
                 <h3 className="text-lg font-semibold mb-4">当前配置信息</h3>
+                <Separator className="my-4" />
                 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">API 端点</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">API 端点</h4>
                     <p className="font-medium">{ovhConfig?.endpoint || 'N/A'}</p>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">标识 (IAM)</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">标识 (IAM)</h4>
                     <p className="font-medium">{taskConfig?.iam || 'N/A'}</p>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">区域</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">区域</h4>
                     <p className="font-medium">{taskConfig?.zone || 'N/A'}</p>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">计划代码</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">计划代码</h4>
                     <p className="font-medium">{taskConfig?.planCode || 'N/A'}</p>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">Telegram 通知</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">Telegram 通知</h4>
                     <p className="font-medium">{telegramConfig?.enabled ? '已启用' : '已禁用'}</p>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm text-gray-500 mb-1">选项数量</h4>
+                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">选项数量</h4>
                     <p className="font-medium">{taskConfig?.options?.length || 0} 个</p>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-4 bg-gradient-ovh text-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-bold mb-2">快速提示</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>• 任务将自动检查服务器可用性</li>
-                  <li>• 找到可用服务器后会立即尝试下单</li>
-                  <li>• 购买成功后会显示订单信息</li>
-                  <li>• 如启用，还会通过 Telegram 接收通知</li>
+              <div className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-lg shadow-md">
+                <h3 className="text-lg font-bold mb-3">快速提示</h3>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start">
+                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </span>
+                    任务将自动检查服务器可用性
+                  </li>
+                  <li className="flex items-start">
+                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </span>
+                    找到可用服务器后会立即尝试下单
+                  </li>
+                  <li className="flex items-start">
+                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </span>
+                    购买成功后会显示订单信息
+                  </li>
+                  <li className="flex items-start">
+                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </span>
+                    如启用，还会通过 Telegram 接收通知
+                  </li>
                 </ul>
               </div>
             </div>
@@ -351,8 +415,8 @@ const Index = () => {
         )}
       </main>
       
-      <footer className="bg-white shadow-inner py-6 mt-8">
-        <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
+      <footer className="bg-white dark:bg-gray-800 shadow-inner py-6 mt-8 border-t dark:border-gray-700">
+        <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400 text-sm">
           <p>OVH 服务器抢购助手 &copy; {new Date().getFullYear()}</p>
           <p className="mt-2">本工具仅用于辅助购买 OVH 服务器，与 OVH 官方无关</p>
         </div>
