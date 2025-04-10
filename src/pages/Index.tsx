@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { OvhConfig, TaskConfig, TelegramConfig, TaskStatus, LogMessage, AvailabilityItem } from '@/types';
 import ConfigForm from '@/components/ConfigForm';
@@ -10,9 +9,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { MoonStar, Sun, SunMoon } from 'lucide-react';
+import { MoonStar, Sun, SunMoon, Server, Settings, Bot, Clock, Terminal, Zap } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Fingerprint, Globe, CheckCircle, Layers } from '@/components/icons';
 
 const Index = () => {
   const { toast } = useToast();
@@ -30,7 +32,6 @@ const Index = () => {
   });
   const [availabilities, setAvailabilities] = useState<AvailabilityItem[]>([]);
 
-  // 添加日志
   const addLog = (level: 'info' | 'error' | 'success' | 'warning', message: string) => {
     const now = new Date();
     const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -47,7 +48,6 @@ const Index = () => {
       logs: [...prev.logs, newLog]
     }));
     
-    // 如果是错误，显示 toast
     if (level === 'error') {
       toast({
         variant: "destructive",
@@ -56,7 +56,6 @@ const Index = () => {
       });
     }
     
-    // 如果是成功，显示 toast
     if (level === 'success') {
       toast({
         title: "成功",
@@ -65,7 +64,6 @@ const Index = () => {
     }
   };
 
-  // 更新可用性列表
   const updateAvailabilities = (availabilityItems: AvailabilityItem[]) => {
     setAvailabilities(availabilityItems);
     setTaskStatus(prev => ({
@@ -74,19 +72,16 @@ const Index = () => {
     }));
   };
 
-  // 处理表单提交
   const handleSubmit = (
     ovhConfig: OvhConfig,
     taskConfig: TaskConfig,
     telegramConfig: TelegramConfig | null
   ) => {
-    // 保存配置
     setOvhConfig(ovhConfig);
     setTaskConfig(taskConfig);
     setTelegramConfig(telegramConfig);
     setIsConfigured(true);
     
-    // 重置状态
     setTaskStatus({
       id: uuidv4(),
       status: 'idle',
@@ -94,7 +89,6 @@ const Index = () => {
     });
     setAvailabilities([]);
     
-    // 创建 OvhService 实例
     const service = new OvhService(
       ovhConfig,
       taskConfig,
@@ -104,11 +98,9 @@ const Index = () => {
     );
     setOvhService(service);
     
-    // 自动开始任务
     startTask(service);
   };
 
-  // 开始任务
   const startTask = async (service?: OvhService) => {
     const activeService = service || ovhService;
     if (!activeService) return;
@@ -124,7 +116,6 @@ const Index = () => {
     try {
       addLog('info', '开始执行抢购任务...');
       
-      // 执行任务
       const success = await activeService.executeTask();
       
       if (success) {
@@ -151,7 +142,6 @@ const Index = () => {
     }
   };
 
-  // 停止任务
   const stopTask = () => {
     if (ovhService) {
       ovhService.stopTask();
@@ -164,14 +154,12 @@ const Index = () => {
     }
   };
 
-  // 重新开始任务
   const restartTask = () => {
     if (ovhService) {
       startTask();
     }
   };
 
-  // 从 localStorage 恢复配置
   useEffect(() => {
     const savedConfig = localStorage.getItem('ovhSniperConfig');
     if (savedConfig) {
@@ -183,7 +171,6 @@ const Index = () => {
           setTelegramConfig(config.telegramConfig || null);
           setIsConfigured(true);
           
-          // 创建 OvhService 实例但不自动开始任务
           const service = new OvhService(
             config.ovhConfig,
             config.taskConfig,
@@ -201,7 +188,6 @@ const Index = () => {
     }
   }, []);
 
-  // 保存配置到 localStorage
   useEffect(() => {
     if (isConfigured && ovhConfig && taskConfig) {
       const configToSave = {
@@ -213,12 +199,10 @@ const Index = () => {
     }
   }, [isConfigured, ovhConfig, taskConfig, telegramConfig]);
 
-  // 处理订单 ID 和 URL
   useEffect(() => {
     const logs = taskStatus.logs;
     if (logs.length === 0) return;
     
-    // 查找订单创建成功的日志
     const orderIdLog = logs.find(log => 
       log.level === 'success' && log.message.includes('订单创建成功！订单ID:')
     );
@@ -248,7 +232,6 @@ const Index = () => {
     }
   }, [taskStatus.logs]);
 
-  // 切换主题函数
   const cycleTheme = () => {
     if (theme === 'dark') {
       setTheme('light');
@@ -259,7 +242,6 @@ const Index = () => {
     }
   };
 
-  // 主题图标
   const ThemeIcon = () => {
     if (theme === 'dark') return <MoonStar className="h-[1.2rem] w-[1.2rem]" />;
     if (theme === 'light') return <Sun className="h-[1.2rem] w-[1.2rem]" />;
@@ -267,15 +249,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Header />
       
       <main className="container mx-auto py-8 px-4 relative">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <Button 
             variant="outline" 
             size="icon" 
-            className="rounded-full" 
+            className="rounded-full bg-background/80 backdrop-blur-sm border-primary/10" 
             onClick={cycleTheme}
             title="切换主题"
           >
@@ -285,12 +267,17 @@ const Index = () => {
         
         {!isConfigured ? (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 mb-8 border dark:border-gray-700">
-              <h2 className="text-2xl font-bold text-center mb-6">配置 OVH 服务器抢购</h2>
-              <ConfigForm onSubmit={handleSubmit} />
-            </div>
+            <Card className="hover-card-effect border-primary/10">
+              <CardContent className="p-6 md:p-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
+                  <Server className="h-7 w-7 text-primary" />
+                  配置 OVH 服务器抢购
+                </h2>
+                <ConfigForm onSubmit={handleSubmit} />
+              </CardContent>
+            </Card>
             
-            <div className="text-center text-gray-600 dark:text-gray-400 mt-8">
+            <div className="text-center text-muted-foreground mt-8">
               <p>
                 本工具用于自动检查和抢购 OVH 服务器。填写必要信息后开始抢购任务。
               </p>
@@ -304,17 +291,24 @@ const Index = () => {
             <div className="lg:col-span-2">
               <Tabs defaultValue="status" className="w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <TabsList className="grid grid-cols-2 h-11">
-                    <TabsTrigger value="status" className="text-base">任务状态</TabsTrigger>
-                    <TabsTrigger value="availability" className="text-base">服务器可用性</TabsTrigger>
+                  <TabsList className="tech-border p-1 bg-muted/30">
+                    <TabsTrigger value="status" className="data-[state=active]:bg-white dark:data-[state=active]:bg-card flex items-center gap-2 text-base">
+                      <Terminal className="h-4 w-4" /> 任务状态
+                    </TabsTrigger>
+                    <TabsTrigger value="availability" className="data-[state=active]:bg-white dark:data-[state=active]:bg-card flex items-center gap-2 text-base">
+                      <Server className="h-4 w-4" /> 服务器可用性
+                    </TabsTrigger>
                   </TabsList>
                   
-                  <button 
+                  <Button 
                     onClick={() => setIsConfigured(false)}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    variant="outline"
+                    size="sm"
+                    className="text-sm border-primary/20 hover:bg-primary/5"
                   >
+                    <Settings className="h-4 w-4 mr-2" />
                     修改配置
-                  </button>
+                  </Button>
                 </div>
                 
                 <TabsContent value="status" className="mt-2">
@@ -335,88 +329,121 @@ const Index = () => {
               </Tabs>
             </div>
             
-            <div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
-                <h3 className="text-lg font-semibold mb-4">当前配置信息</h3>
-                <Separator className="my-4" />
-                
-                <div className="space-y-5">
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">API 端点</h4>
-                    <p className="font-medium">{ovhConfig?.endpoint || 'N/A'}</p>
-                  </div>
+            <div className="space-y-6">
+              <Card className="hover-card-effect border-primary/10">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Settings className="h-5 w-5 text-primary" />
+                    当前配置信息
+                  </h3>
+                  <Separator className="my-4 bg-primary/10" />
                   
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">标识 (IAM)</h4>
-                    <p className="font-medium">{taskConfig?.iam || 'N/A'}</p>
+                  <div className="space-y-5">
+                    <div className="flex items-start">
+                      <Globe className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">API 端点</h4>
+                        <p className="font-medium">{ovhConfig?.endpoint || 'N/A'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Fingerprint className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">标识 (IAM)</h4>
+                        <p className="font-medium">{taskConfig?.iam || 'N/A'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <MapPin className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">区域</h4>
+                        <p className="font-medium">{taskConfig?.zone || 'N/A'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Server className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">计划代码</h4>
+                        <p className="font-medium font-mono">{taskConfig?.planCode || 'N/A'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Bot className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">Telegram 通知</h4>
+                        <div>
+                          {telegramConfig?.enabled ? (
+                            <Badge variant="success" className="font-normal">已启用</Badge>
+                          ) : (
+                            <Badge variant="outline" className="font-normal">已禁用</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Layers className="h-5 w-5 text-primary/60 mr-3 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm text-muted-foreground mb-1">选项数量</h4>
+                        <p className="font-medium">
+                          {taskConfig?.options?.length || 0} 个
+                          {taskConfig?.options && taskConfig.options.length > 0 && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({taskConfig.options.join(', ')})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">区域</h4>
-                    <p className="font-medium">{taskConfig?.zone || 'N/A'}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">计划代码</h4>
-                    <p className="font-medium">{taskConfig?.planCode || 'N/A'}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">Telegram 通知</h4>
-                    <p className="font-medium">{telegramConfig?.enabled ? '已启用' : '已禁用'}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm text-gray-500 dark:text-gray-400 mb-1">选项数量</h4>
-                    <p className="font-medium">{taskConfig?.options?.length || 0} 个</p>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
               
-              <div className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-bold mb-3">快速提示</h3>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start">
-                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                      </svg>
-                    </span>
-                    任务将自动检查服务器可用性
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                      </svg>
-                    </span>
-                    找到可用服务器后会立即尝试下单
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                      </svg>
-                    </span>
-                    购买成功后会显示订单信息
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-white/20 p-1 rounded-full mr-2">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
-                      </svg>
-                    </span>
-                    如启用，还会通过 Telegram 接收通知
-                  </li>
-                </ul>
-              </div>
+              <Card className="tech-border bg-tech-gradient text-white overflow-hidden">
+                <CardContent className="p-6 relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-x-10 -translate-y-10"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-2xl translate-x-5 translate-y-5"></div>
+                  
+                  <h3 className="text-lg font-bold mb-4 relative z-10">快速提示</h3>
+                  <ul className="space-y-3 text-sm relative z-10">
+                    <li className="flex items-start">
+                      <span className="inline-block bg-white/10 p-1.5 rounded-full mr-3 mt-0.5">
+                        <Clock className="h-3.5 w-3.5" />
+                      </span>
+                      <span>任务将自动检查服务器可用性</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="inline-block bg-white/10 p-1.5 rounded-full mr-3 mt-0.5">
+                        <Zap className="h-3.5 w-3.5" />
+                      </span>
+                      <span>找到可用服务器后会立即尝试下单</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="inline-block bg-white/10 p-1.5 rounded-full mr-3 mt-0.5">
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      </span>
+                      <span>购买成功后会显示订单信息</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="inline-block bg-white/10 p-1.5 rounded-full mr-3 mt-0.5">
+                        <Bot className="h-3.5 w-3.5" />
+                      </span>
+                      <span>如启用，还会通过 Telegram 接收通知</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
       </main>
       
-      <footer className="bg-white dark:bg-gray-800 shadow-inner py-6 mt-8 border-t dark:border-gray-700">
-        <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400 text-sm">
+      <footer className="border-t border-muted/20 py-6 mt-8">
+        <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
           <p>OVH 服务器抢购助手 &copy; {new Date().getFullYear()}</p>
           <p className="mt-2">本工具仅用于辅助购买 OVH 服务器，与 OVH 官方无关</p>
         </div>
