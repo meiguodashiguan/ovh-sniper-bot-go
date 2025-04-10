@@ -63,6 +63,10 @@ const Index = () => {
   // 更新可用性列表
   const updateAvailabilities = (availabilityItems: AvailabilityItem[]) => {
     setAvailabilities(availabilityItems);
+    setTaskStatus(prev => ({
+      ...prev,
+      availabilities: availabilityItems
+    }));
   };
 
   // 处理表单提交
@@ -90,7 +94,8 @@ const Index = () => {
       ovhConfig,
       taskConfig,
       telegramConfig,
-      addLog
+      addLog,
+      updateAvailabilities
     );
     setOvhService(service);
     
@@ -178,7 +183,8 @@ const Index = () => {
             config.ovhConfig,
             config.taskConfig,
             config.telegramConfig || null,
-            addLog
+            addLog,
+            updateAvailabilities
           );
           setOvhService(service);
           

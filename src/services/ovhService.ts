@@ -1,5 +1,5 @@
-
-import { OvhConfig, TaskConfig, TelegramConfig } from '@/types';
+import { OvhConfig, TaskConfig, TelegramConfig, AvailabilityResponse, AvailabilityItem, DatacenterInfo } from '@/types';
+import jsSHA from 'jssha';
 
 /**
  * OVH API 服务
@@ -11,17 +11,20 @@ export class OvhService {
   private taskConfig: TaskConfig;
   private abortController: AbortController | null = null;
   private logCallback: (level: 'info' | 'error' | 'success' | 'warning', message: string) => void;
+  private availabilityCallback: (items: AvailabilityItem[]) => void;
 
   constructor(
     config: OvhConfig,
     taskConfig: TaskConfig,
     telegramConfig: TelegramConfig | null,
-    logCallback: (level: 'info' | 'error' | 'success' | 'warning', message: string) => void
+    logCallback: (level: 'info' | 'error' | 'success' | 'warning', message: string) => void,
+    availabilityCallback?: (items: AvailabilityItem[]) => void
   ) {
     this.config = config;
     this.taskConfig = taskConfig;
     this.telegramConfig = telegramConfig;
     this.logCallback = logCallback;
+    this.availabilityCallback = availabilityCallback || (() => {});
   }
 
   /**
@@ -56,6 +59,9 @@ export class OvhService {
         return false;
       }
       
+      // 将可用性数据转换为更简单的格式并更新UI
+      const simplifiedAvailabilities: AvailabilityItem[] = [];
+      
       // 查找可用的数据中心
       let foundAvailable = false;
       let availableDC = null;
@@ -69,8 +75,16 @@ export class OvhService {
           const availability = dcInfo.availability;
           const datacenterName = dcInfo.datacenter;
           
+          // 添加到简化列表
+          simplifiedAvailabilities.push({
+            fqn: fqn,
+            datacenter: datacenterName,
+            availability: availability
+          });
+          
           this.log('info', `型号: ${fqn}, 数据中心: ${datacenterName}, 可用性: ${availability}`);
           
+          // 检查可用性状态
           if (availability && !['unavailable', 'unknown'].includes(availability)) {
             foundAvailable = true;
             availableDC = datacenterName;
@@ -81,6 +95,9 @@ export class OvhService {
         
         if (foundAvailable) break;
       }
+      
+      // 更新UI显示可用性信息
+      this.availabilityCallback(simplifiedAvailabilities);
       
       if (!foundAvailable) {
         this.log('warning', `计划代码 ${this.taskConfig.planCode} 当前无可用服务器`);
@@ -171,8 +188,7 @@ export class OvhService {
         if (signal.aborted) return false;
       }
       
-      /* 
-      // 7. 添加附加选项（可选功能）
+      // 7. 添加附加选项（如果有）
       if (this.taskConfig.options?.length > 0) {
         this.log('info', `为项目 ${itemId} 添加附加选项...`);
         
@@ -188,7 +204,6 @@ export class OvhService {
           if (signal.aborted) return false;
         }
       }
-      */
       
       // 8. 检查购物车和准备结账
       this.log('info', `获取购物车 ${cartId} 的摘要信息...`);
@@ -278,6 +293,30 @@ export class OvhService {
   }
 
   /**
+   * 创建OVH API请求签名
+   * 这是前端环境中一个简化的版本，实际生产环境中应在后端完成
+   */
+  private createOvhSignature(method: string, url: string, body: string, timestamp: number): string {
+    try {
+      const shaObj = new jsSHA("SHA-1", "TEXT", { encoding: "UTF8" });
+      const toSign = [
+        this.config.appSecret,
+        this.config.consumerKey,
+        method,
+        url,
+        body,
+        timestamp
+      ].join('+');
+      
+      shaObj.update(toSign);
+      return '$1$' + shaObj.getHash("HEX");
+    } catch (error) {
+      console.error('计算签名时出错:', error);
+      throw new Error('无法计算API请求签名');
+    }
+  }
+
+  /**
    * 调用 OVH API
    */
   private async callOvhApi(
@@ -286,28 +325,31 @@ export class OvhService {
     body?: Record<string, any>
   ): Promise<any> {
     try {
-      // 注意：这是前端直接调用 OVH API 的示例
-      // 实际生产环境中，应该通过后端服务来中转这些请求，并处理签名等安全问题
-      // 在前端直接调用需要处理CORS问题，这里只是为了演示
-
       const timestamp = Math.round(Date.now() / 1000);
       const url = `https://${this.config.endpoint}/1.0${path}`;
-      
-      // 创建签名
-      // 注意：在浏览器环境中无法安全地计算签名，这部分通常应在后端完成
-      // 以下代码仅供参考，实际应用中请使用适当的后端服务处理API请求
-      
       const payload = body ? JSON.stringify(body) : '';
       
-      // 模拟请求，实际开发时需要实现正确的签名逻辑
+      // 创建请求头
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Ovh-Application': this.config.appKey,
+        'X-Ovh-Consumer': this.config.consumerKey,
+        'X-Ovh-Timestamp': timestamp.toString()
+      };
+      
+      // 尝试在前端创建签名，但这通常应该在后端完成
+      try {
+        const signature = this.createOvhSignature(method, url, payload, timestamp);
+        headers['X-Ovh-Signature'] = signature;
+      } catch (e) {
+        console.error('创建签名失败:', e);
+        // 在实际环境中，这里应该停止请求
+        // 但为了演示，我们继续发送请求（可能会失败）
+      }
+      
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Ovh-Application': this.config.appKey,
-          'X-Ovh-Consumer': this.config.consumerKey,
-          // 实际请求还需要 X-Ovh-Timestamp 和 X-Ovh-Signature
-        },
+        headers,
         body: method !== 'GET' ? payload : undefined,
         signal: this.abortController?.signal
       });
@@ -333,7 +375,7 @@ export class OvhService {
   /**
    * 检查服务器可用性
    */
-  private async checkAvailability() {
+  private async checkAvailability(): Promise<AvailabilityResponse[]> {
     return await this.callOvhApi('GET', `/dedicated/server/datacenter/availabilities?planCode=${this.taskConfig.planCode}`);
   }
   

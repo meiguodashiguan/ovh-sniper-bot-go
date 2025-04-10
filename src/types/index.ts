@@ -33,6 +33,16 @@ export interface AvailabilityItem {
   availability: string;
 }
 
+export interface DatacenterInfo {
+  datacenter: string;
+  availability: string;
+}
+
+export interface AvailabilityResponse {
+  fqn: string;
+  datacenters: DatacenterInfo[];
+}
+
 export interface LogMessage {
   id: string;
   time: string;
@@ -53,4 +63,17 @@ export interface ServerCatalogItem {
   planCode: string;
   displayName: string;
   description?: string;
+}
+
+export interface CartResponse {
+  cartId: string;
+}
+
+export interface ItemResponse {
+  itemId: string;
+}
+
+export interface CheckoutResponse {
+  orderId: string;
+  url: string;
 }
