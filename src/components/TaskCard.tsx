@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { TaskStatus, LogMessage } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, PlayCircle, StopCircle, RefreshCw, Terminal, ClockIcon } from 'lucide-react';
+import { ExternalLink, PlayCircle, StopCircle, RefreshCw, Terminal, ClockIcon, XCircle } from 'lucide-react';
 import { AlertTriangle, CheckCircle, Info } from '@/components/icons';
 
 interface TaskCardProps {

@@ -30,6 +30,7 @@ export interface ServerOption {
 export interface AvailabilityItem {
   fqn: string;
   datacenter: string;
+  hardware: string;  // Add the missing hardware property
   availability: string;
 }
 

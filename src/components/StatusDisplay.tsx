@@ -22,10 +22,13 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ availabilities, isLoading
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <Loader2 className="h-10 w-10 text-muted-foreground animate-spin mb-4" />
+          <div className="relative w-16 h-16 mb-4">
+            <div className="absolute inset-0 rounded-full bg-blue-500/10 animate-ping"></div>
+            <Loader2 className="h-16 w-16 text-primary/60 animate-spin absolute inset-0" />
+          </div>
           <h3 className="text-lg font-medium mb-2">正在检查服务器可用性</h3>
           <p className="text-muted-foreground text-center max-w-md">
-            系统正在检查 <span className="font-mono text-primary">{planCode}</span> 的可用性
+            系统正在检查 <span className="font-mono bg-primary/5 px-1 py-0.5 rounded text-primary">{planCode}</span> 的可用性
           </p>
         </CardContent>
       </Card>
@@ -42,7 +45,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ availabilities, isLoading
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <SearchX className="h-10 w-10 text-muted-foreground mb-4" />
+          <SearchX className="h-16 w-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">暂无可用性数据</h3>
           <p className="text-muted-foreground text-center max-w-md">
             开始任务后将显示服务器的可用性状态
@@ -83,7 +86,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ availabilities, isLoading
                   <div className="font-mono text-muted-foreground">{item.hardware}</div>
                   <div className="text-right">
                     {item.availability ? (
-                      <Badge variant="success" className="font-normal">可购买</Badge>
+                      <Badge variant="success" className="font-normal bg-green-500/20 text-green-500 border-green-500/30">可购买</Badge>
                     ) : (
                       <Badge variant="outline" className="font-normal">缺货中</Badge>
                     )}
@@ -92,7 +95,8 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ availabilities, isLoading
               ))}
             </div>
             {isLoading && (
-              <p className="text-sm text-muted-foreground text-center pt-2">
+              <p className="text-sm text-muted-foreground text-center pt-2 flex items-center justify-center">
+                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
                 正在实时更新可用性数据...
               </p>
             )}
@@ -102,7 +106,7 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ availabilities, isLoading
             <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">没有找到任何服务器</h3>
             <p className="text-muted-foreground text-center max-w-md">
-              目前没有关于 <span className="font-mono text-primary">{planCode}</span> 的可用性数据
+              目前没有关于 <span className="font-mono bg-primary/5 px-1 py-0.5 rounded text-primary">{planCode}</span> 的可用性数据
             </p>
           </div>
         )}
